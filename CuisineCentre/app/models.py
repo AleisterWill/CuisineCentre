@@ -1,13 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from ckeditor.fields import RichTextField
 
 
 class User(AbstractUser):
     avatar = models.ImageField(upload_to='user_avatar', null=True)
-
-
-class Image(models.Model):
-    path = models.ImageField(upload_to='images', null=True)
+    is_store_owner = models.BooleanField(default=False)
+    activated = models.BooleanField(default=True)
 
 
 class TimedModel(models.Model):
@@ -22,10 +21,12 @@ class MonAn(TimedModel):
     name = models.CharField(max_length=50)
     price = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
+    image = models.ImageField(upload_to='monan_image/%Y/%m', null=True)
+    short_description = models.TextField(null=True)
+    description = RichTextField(null=True)
 
+    cuahang = models.ForeignKey('CuaHang', on_delete=models.CASCADE, null=True)
     loaimonan = models.ForeignKey('LoaiMonAn', on_delete=models.PROTECT, null=True)
-    rating_set = models.ManyToManyField('RatingMonAn', related_name="rating_set", editable=False)
-    image_set = models.ManyToManyField(Image, related_name="image_set_ma")
 
     def __str__(self):
         return self.name
@@ -35,43 +36,64 @@ class LoaiMonAn(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(null=True)
 
-    def __str__(self):
-        return self.name
-
 
 class CuaHang(models.Model):
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=500)
+    image = models.ImageField(upload_to='cuahang_image/%Y/%m', null=True)
 
-    menu_set = models.ManyToManyField('Menu', related_name="menu_set", editable=False)
-    rating_set = models.ManyToManyField('RatingCuaHang', related_name="rating_set", editable=False)
-    image_set = models.ManyToManyField(Image, related_name="image_set_ch")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.name
 
 
-class Menu(TimedModel):
-    buoi = models.CharField(max_length=50)
-    monan_set = models.ManyToManyField(MonAn, related_name="monan_set")
+class MonAnActionAbstract(TimedModel):
+    monan = models.ForeignKey(MonAn, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.buoi
-
-
-class RatingMonAn(TimedModel):
-    score = models.IntegerField()
-    comment = models.TextField()
-
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    class Meta:
+        unique_together = ('monan', 'user')
+        abstract = True
 
 
-class RatingCuaHang(TimedModel):
-    score = models.IntegerField()
-    comment = models.TextField()
+class LikeMonAn(MonAnActionAbstract):
+    liked = models.BooleanField(default=True)
 
-    user = models.ForeignKey(User, on_delete=models.PROTECT, null=True)
 
+class RatingMonAn(MonAnActionAbstract):
+    rate = models.FloatField(default=0)
+
+
+class CommentMonAn(TimedModel):
+    noi_dung = models.TextField()
+
+    monan = models.ForeignKey(MonAn, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
+class CuaHangActionAbstract(TimedModel):
+    cuahang = models.ForeignKey(CuaHang, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('cuahang', 'user')
+        abstract = True
+
+
+class LikeCuaHang(CuaHangActionAbstract):
+    liked = models.BooleanField(default=True)
+
+
+class RatingCuaHang(CuaHangActionAbstract):
+    rate = models.FloatField(default=0)
+
+
+class CommentCuaHang(TimedModel):
+    noi_dung = models.TextField()
+
+    cuahang = models.ForeignKey(CuaHang, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 
