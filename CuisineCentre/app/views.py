@@ -5,9 +5,10 @@ from django.db.models import Q
 from .paginators import MonAnPaginator, CuaHangPaginator, CommentMonAnPaginator, CommentCuaHangPaginator
 
 from .models import MonAn, LoaiMonAn, LikeMonAn, RatingMonAn, CommentMonAn, CuaHang, LikeCuaHang, RatingCuaHang, \
-    CommentCuaHang, User
+    CommentCuaHang, User, DonHang, HoaDon
 from .serializers import MonAnSerializer, AuthorizedMonAnSerializer, LoaiMonAnSerializer, CommentMonAnSerializer, \
-    CuaHangSerializer, AuthorizedCuaHangSerializer, CommentCuaHangSerializer, UserSerializer
+    CuaHangSerializer, AuthorizedCuaHangSerializer, CommentCuaHangSerializer, UserSerializer, DonHangSerializer, \
+    HoaDonSerializer
 
 from .permissions import IsStoreOwner
 
@@ -23,7 +24,7 @@ class MonAnViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.ListAPIV
         return self.serializer_class
 
     def get_permissions(self):
-        if self.action in ['post_comment', 'like', 'rate']:
+        if self.action in ['post_comment', 'like', 'rate', 'post_order']:
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
 
@@ -39,6 +40,19 @@ class MonAnViewSet(viewsets.ViewSet, generics.RetrieveAPIView, generics.ListAPIV
             q = q.filter(Q(name__icontains=kw) | Q(loaimonan__name__icontains=kw))
 
         return q.order_by('-created_date')
+
+    @action(methods=['post'], detail=True, url_path='order')
+    def post_order(self, request, pk):
+        o = DonHang(
+            price=request.data['price'],
+            quantity=request.data['quantity'],
+            total=request.data['total'],
+            status=request.data['status'],
+            monan=self.get_object(),
+            user=request.user
+        )
+        o.save()
+        return Response(status=status.HTTP_201_CREATED)
 
     @action(methods=['post'], detail=True, url_path='comment')
     def post_comment(self, request, pk):
@@ -225,3 +239,8 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
             results.save()
             return Response(CuaHangSerializer(results, context={"request": request}).data,
                             status=status.HTTP_201_CREATED)
+
+
+class DonHangViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
+    queryset = DonHang.objects.all()
+    serializer_class = DonHangSerializer

@@ -9,6 +9,7 @@ router.register('CommentMonAn', views.CommentMonAnViewSet)
 router.register('CuaHang', views.CuaHangViewSet)
 router.register('CommentCuaHang', views.CommentCuaHangViewSet)
 router.register('User', views.UserViewSet)
+router.register('DonHang', views.DonHangViewSet)
 
 urlpatterns = [
     path('', include(router.urls))

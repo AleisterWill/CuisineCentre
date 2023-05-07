@@ -96,6 +96,22 @@ class CommentCuaHang(TimedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
+class DonHang(TimedModel):
+    monan = models.ForeignKey(MonAn, on_delete=models.CASCADE)
+    price = models.IntegerField(default=0)
+    quantity = models.IntegerField(default=1)
+    total = models.IntegerField(default=0)
+    status = models.CharField(max_length=50)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
+class HoaDon(TimedModel):
+    status = models.CharField(max_length=50)
+    total = models.IntegerField(default=0)
+
+    donhang = models.ForeignKey(DonHang, on_delete=models.CASCADE)
+
+
 
 
 

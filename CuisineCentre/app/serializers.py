@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MonAn, LoaiMonAn, CommentMonAn, CuaHang, CommentCuaHang, User
+from .models import MonAn, LoaiMonAn, CommentMonAn, CuaHang, CommentCuaHang, User, DonHang, HoaDon
 from django.db.models import Avg
 
 
@@ -108,14 +108,14 @@ class MonAnSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MonAn
-        fields = ['id', 'name', 'price', 'loaimonan', 'short_description', 'description', 'image', 'cuahang', 'rate_average']
+        fields = ['id', 'name', 'price', 'loaimonan', 'short_description', 'description', 'image', 'cuahang',
+                  'rate_average']
 
 
 class AuthorizedMonAnSerializer(MonAnSerializer):
     liked = serializers.SerializerMethodField()
     liked_count = serializers.SerializerMethodField()
     rate = serializers.SerializerMethodField()
-
 
     def get_liked(self, monan):
         request = self.context.get('request')
@@ -134,3 +134,15 @@ class AuthorizedMonAnSerializer(MonAnSerializer):
     class Meta:
         model = MonAnSerializer.Meta.model
         fields = MonAnSerializer.Meta.fields + ['liked', 'liked_count', 'rate']
+
+
+class DonHangSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DonHang
+        fields = ['id', 'created_date', 'updated_date', 'monan', 'price', 'quantity', 'total', 'status', 'user']
+
+
+class HoaDonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HoaDon
+        fields = ['id', 'created_date', 'updated_date', 'status', 'total', 'donhang']
